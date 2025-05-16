@@ -1,0 +1,23 @@
+<!-- calculations/templates/calculations/tax_calculator.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tax Calculator</title>
+</head>
+<body>
+    <h1>Tax Calculator</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Calculate Tax</button>
+    </form>
+
+    {% if total_income is not None %}
+        <h2>Tax Details:</h2>
+        <p>Total Income: ${{ total_income }}</p>
+        <p>Tax Amount: ${{ tax|floatformat:2 }}</p>
+    {% endif %}
+</body>
+</html>
