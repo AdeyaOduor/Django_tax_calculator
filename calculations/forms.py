@@ -1,4 +1,3 @@
-# calculations/forms.py
 from django import forms
 
 class IncomeForm(forms.Form):
