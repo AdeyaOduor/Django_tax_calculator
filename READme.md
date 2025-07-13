@@ -15,11 +15,7 @@ python manage.py createsuperuser
 python manage.py runserver
 
 
-# calculations/forms.py, create forms to capture user input
-from django import forms
-
-class IncomeForm(forms.Form):
-    total_income = forms.FloatField(label='Total Income', min_value=0)
+# Create the following file inside calculations folder: forms.py, views.py,
 
 # calculations/views.py, implement logic for tax calculations
 from django.shortcuts import render
