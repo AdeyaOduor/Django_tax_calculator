@@ -1,4 +1,4 @@
-# calculations/views.py
+# implement logic for tax calculations
 from django.shortcuts import render
 from .forms import IncomeForm
 
