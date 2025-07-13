@@ -1,4 +1,4 @@
-# calculations/urls.py
+# for calculations views
 from django.urls import path
 from .views import calculate_tax
 
