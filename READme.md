@@ -3,6 +3,18 @@ cd tax_calculator
 django-admin startapp calculations
 
 pip install django-ratelimit
+pip install mysqlclient
+
+<!-- Create MySQL database: in mysql -->
+
+CREATE DATABASE tax_calculator CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'tax_user'@'localhost' IDENTIFIED BY 'securepassword123';
+GRANT ALL PRIVILEGES ON tax_calculator.* TO 'tax_user'@'localhost';
+FLUSH PRIVILEGES;
+
+<!-- import stored procedure on cli -->
+
+mysql -u tax_user -p tax_calculator < mysql_procedures.sql
 
 # tax_calculator/settings.py
 INSTALLED_APPS = [
@@ -43,10 +55,9 @@ bash
 
 python manage.py createsuperuser
 
-9. Run the Server
+9. Run the Server: Start the Django development server in bash,
 
-Start the Django development server:
-bash
+python manage.py populate_tax_data
 
 python manage.py runserver
 

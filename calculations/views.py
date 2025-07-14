@@ -15,7 +15,6 @@ logger = logging.getLogger('tax_calculator')
 
 def calculate_tax(request):
     try:
-        data = json.loads(request.body)
         income = float(data.get('income', 0))
         deductions = float(data.get('deductions', 0))
         year = data.get('year', '2025')  # Default to current year
@@ -26,7 +25,45 @@ def calculate_tax(request):
         income = float(data.get('income', 0))
         if income <= 0:
             logger.warning(f"Invalid income value received: {income}")
-            return JsonResponse({'success': False, 'error': 'Income must be positive'}, status=400)    
+            return JsonResponse({'success': False, 'error': 'Income must be positive'}, status=400) 
+        
+        deductions = float(data.get('deductions', 0)) or 0
+        year = data.get('year', datetime.now().year)
+        
+        # Call MySQL stored procedure
+        with connection.cursor() as cursor:
+            cursor.callproc('CalculateAllTaxes', [
+                income,
+                deductions,
+                year,
+                0,  # taxable_income (out)
+                0,  # income_tax (out)
+                0,  # nhif (out)
+                0,  # nssf (out)
+                0   # net_salary (out)
+            ])
+            
+            # Get output parameters
+            results = cursor.fetchone()
+            taxable_income = results[0]
+            income_tax = results[1]
+            nhif = results[2]
+            nssf = results[3]
+            net_salary = results[4]
+        
+        # Save calculation to database
+        tax_calc = TaxCalculation.objects.create(
+            user=request.user if request.user.is_authenticated else None,
+            ip_address=request.META.get('REMOTE_ADDR'),
+            income=income,
+            deductions=deductions,
+            year=year,
+            taxable_income=taxable_income,
+            income_tax=income_tax,
+            nhif=nhif,
+            nssf=nssf,
+            net_salary=net_salary
+        )   
         
         # Calculate taxable income
         taxable_income = income - deductions
@@ -51,11 +88,12 @@ def calculate_tax(request):
             'success': True,
             'results': {
                 'gross_income': income,
-                'taxable_income': taxable_income,
-                'income_tax': tax,
-                'nhif': nhif,
-                'nssf': nssf,
-                'net_salary': net_salary
+                'taxable_income': float(taxable_income),
+                'income_tax': float(income_tax),
+                'nhif': float(nhif),
+                'nssf': float(nssf),
+                'net_salary': float(net_salary),
+                'calculation_id': tax_calc.id
             }
         }
         
@@ -64,4 +102,4 @@ def calculate_tax(request):
     
     except Exception as e:
         logger.error(f"Error in tax calculation: {str(e)}", exc_info=True)
-        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)       
