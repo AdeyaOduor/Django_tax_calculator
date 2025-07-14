@@ -50,6 +50,50 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+
+TAX_RATES = {
+    '2023': [
+        {'threshold': 288000, 'rate': 0.1, 'fixed': 0},
+        {'threshold': 388000, 'rate': 0.25, 'fixed': 28800},
+        {'threshold': float('inf'), 'rate': 0.3, 'fixed': 53800}
+    ],
+    # Add other years as needed
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'tax_calculator.log',
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'loggers': {
+        'tax_calculator': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+        },
+    },
+}
+
 ROOT_URLCONF = 'tax_calculator.urls'
 
 TEMPLATES = [
@@ -119,6 +163,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+
+# For production, add:
+# STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field

@@ -1,23 +1,155 @@
-<!-- calculations/templates/calculations/tax_calculator.html -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tax Calculator</title>
-</head>
-<body>
-    <h1>Tax Calculator</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Calculate Tax</button>
-    </form>
+{% extends 'base.html' %}
+{% load static %}
 
-    {% if total_income is not None %}
-        <h2>Tax Details:</h2>
-        <p>Total Income: ${{ total_income }}</p>
-        <p>Tax Amount: ${{ tax|floatformat:2 }}</p>
-    {% endif %}
-</body>
-</html>
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h4 mb-0"><i class="bi bi-calculator"></i> Tax Calculator</h2>
+                </div>
+                <div class="card-body">
+                    <form id="taxForm" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="income" class="form-label">Annual Income (KSH):</label>
+                            <input type="number" class="form-control" id="income" required min="0" step="0.01">
+                            <div class="invalid-feedback">
+                                Please enter a valid positive income amount.
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="deductions" class="form-label">Deductions (KSH):</label>
+                            <input type="number" class="form-control" id="deductions" value="0" min="0" step="0.01">
+                        </div>
+                        <div class="mb-3">
+                            <label for="year" class="form-label">Tax Year:</label>
+                            <select class="form-select" id="year" required>
+                                <option value="">Select Year</option>
+                                <option value="2023">2023</option>
+                                <option value="2024">2024</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="calculateBtn">
+                            <i class="bi bi-calculate"></i> Calculate Tax
+                            <span class="spinner-border spinner-border-sm loading-spinner" role="status" aria-hidden="true"></span>
+                        </button>
+                    </form>
+                    
+                    <div id="result" class="mt-4 p-3 bg-light rounded d-none">
+                        <h3 class="h5">Tax Calculation Results</h3>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <tbody>
+                                    <!-- Results will be inserted here by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div id="errorAlert" class="alert alert-danger mt-3 d-none" role="alert"></div>
+                    
+                    <div id="rateLimitAlert" class="alert alert-warning mt-3 d-none" role="alert">
+                        You've made too many requests. Please wait a minute before trying again.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const taxForm = document.getElementById('taxForm');
+    const resultDiv = document.getElementById('result');
+    const errorAlert = document.getElementById('errorAlert');
+    const rateLimitAlert = document.getElementById('rateLimitAlert');
+    const calculateBtn = document.getElementById('calculateBtn');
+    const spinner = calculateBtn.querySelector('.loading-spinner');
+    
+    taxForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Form validation
+        if (!this.checkValidity()) {
+            e.stopPropagation();
+            this.classList.add('was-validated');
+            return;
+        }
+        
+        // Reset UI
+        resultDiv.classList.add('d-none');
+        errorAlert.classList.add('d-none');
+        rateLimitAlert.classList.add('d-none');
+        calculateBtn.disabled = true;
+        spinner.style.display = 'inline-block';
+        
+        try {
+            const response = await fetch('{% url "calculate_tax" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    income: parseFloat(document.getElementById('income').value),
+                    deductions: parseFloat(document.getElementById('deductions').value) || 0,
+                    year: document.getElementById('year').value
+                })
+            });
+            
+            if (response.status === 429) {
+                rateLimitAlert.classList.remove('d-none');
+                return;
+            }
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                const results = data.results;
+                resultDiv.querySelector('tbody').innerHTML = `
+                    <tr>
+                        <th>Gross Income</th>
+                        <td>KSH ${results.gross_income.toLocaleString()}</td>
+                    </tr>
+                    <tr>
+                        <th>Taxable Income</th>
+                        <td>KSH ${results.taxable_income.toLocaleString()}</td>
+                    </tr>
+                    <tr>
+                        <th>Income Tax</th>
+                        <td>KSH ${results.income_tax.toLocaleString()}</td>
+                    </tr>
+                    <tr>
+                        <th>NHIF</th>
+                        <td>KSH ${results.nhif.toLocaleString()}</td>
+                    </tr>
+                    <tr>
+                        <th>NSSF</th>
+                        <td>KSH ${results.nssf.toLocaleString()}</td>
+                    </tr>
+                    <tr class="table-primary">
+                        <th>Net Salary</th>
+                        <td>KSH ${results.net_salary.toLocaleString()}</td>
+                    </tr>
+                `;
+                resultDiv.classList.remove('d-none');
+                resultDiv.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                errorAlert.textContent = data.error || 'An error occurred during calculation.';
+                errorAlert.classList.remove('d-none');
+            }
+        } catch (error) {
+            errorAlert.textContent = 'Failed to connect to the server. Please try again.';
+            errorAlert.classList.remove('d-none');
+        } finally {
+            calculateBtn.disabled = false;
+            spinner.style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock %}

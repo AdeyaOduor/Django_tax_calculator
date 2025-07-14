@@ -1,0 +1,22 @@
+/* Custom styles to complement Bootstrap */
+.card {
+    border-radius: 0.5rem;
+    margin-top: 2rem;
+}
+
+#result {
+    transition: all 0.3s ease;
+}
+
+.loading-spinner {
+    display: none;
+    width: 2rem;
+    height: 2rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .card-body {
+        padding: 1.25rem;
+    }
+}
