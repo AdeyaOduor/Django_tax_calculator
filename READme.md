@@ -73,5 +73,13 @@ To complete the setup:
 
 # Git vertsion control steps
 
+git add .
+git commit -m 'modified files'
+git push origin main
 
+# pull then push
+git fetch origin
+git rebase origin/main
+git add .
+git rebase --continue
 git push origin main --force-with-lease
