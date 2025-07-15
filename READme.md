@@ -71,13 +71,17 @@ To complete the setup:
     Set up proper CSRF protection in production (remove @csrf_exempt)
 '''
 
-# Git vertsion control steps
+# Git vertsion control steps in cli
+git clone https://github.com/AdeyaOduor/tax_calculator.git
+cd tax_calculator
+code .
 
+# modify and add files on vscode terminal,
 git add .
 git commit -m 'modified files'
 git push origin main
 
-# pull then push
+# pull then push form vscode terminal,
 git fetch origin
 git rebase origin/main
 git add .
