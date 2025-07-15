@@ -70,3 +70,8 @@ To complete the setup:
 
     Set up proper CSRF protection in production (remove @csrf_exempt)
 '''
+
+# Git vertsion control steps
+
+
+git push origin main --force-with-lease
