@@ -1,8 +1,9 @@
 # implement logic for tax calculations
-from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django_ratelimit.decorators import ratelimit
+from django.http import JsonResponse
+from django.db import connection
 from django.conf import settings      
 import logging
 import json
