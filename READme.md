@@ -88,3 +88,18 @@ git rebase origin/main
 git add .
 git rebase --continue
 git push origin main --force-with-lease
+
+
+# 1. First, fetch the latest changes from remote
+git fetch origin
+
+# 2. Merge the remote changes into your local branch
+git merge origin/your-branch-name
+
+# 3. Resolve any merge conflicts if they occur
+# (Open files with conflicts, edit them, then mark as resolved)
+git add .
+git commit -m "Merge remote changes"
+
+# 4. Now push your changes
+git push origin your-branch-name
